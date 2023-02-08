@@ -37,10 +37,10 @@ DEP_FILES = $(addprefix $(DEP_PATH)/,$(addsuffix .d,$(FILE_NAMES)))
 OBJ_FILES = $(addprefix $(BIN_PATH)/,$(notdir $(CPP_FILES:.cpp=.o)))
 
 ##### Executable name
-EXEC = program.exe
+EXEC = program.out
 
 .PRECIOUS: $(DEP_FILES)
-.PHONY: release debug cppcheck clean folders help
+.PHONY: release debug cppcheck clean folders help execute valgrind
 
 ##### Generates executable
 $(EXEC): $(OBJ_FILES)
@@ -66,6 +66,10 @@ execute:
 cppcheck:
 	cppcheck --enable=all . -I./include --suppress=missingIncludeSystem
 
+##### Call for valgrind
+valgrind:
+	valgrind --leak-check=yes -s ./$(EXEC)
+
 release: FLAGS += $(RFLAGS)
 release: $(EXEC)
 
@@ -84,6 +88,8 @@ help:
 	@echo - debug:    Builds debug version
 	@echo - clean:    Cleans generated files
 	@echo - cppcheck: Uses cppcheck on compiled objects
+	@echo - valgrind: Uses valgrind on linked programs
+	@echo - execute:  Executes the game
 	@echo - help:     Shows help
 	@echo - folders:  Generates project directories
 
