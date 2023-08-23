@@ -68,7 +68,7 @@ cppcheck:
 
 ##### Call for valgrind
 valgrind:
-	valgrind --leak-check=yes -s ./$(EXEC)
+	valgrind -s --leak-check=full --show-leak-kinds=all ./$(EXEC)
 
 release: FLAGS += $(RFLAGS)
 release: $(EXEC)
