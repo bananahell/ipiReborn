@@ -1,3 +1,13 @@
+/**
+ * @brief Program to run the solutions for the image processing class's
+ * assignments I had at Universidade de Brasilia, Brasil.
+ *
+ * The first solution messes up an image by making it edgy, cutting pixels then
+ * enlarging them, so that I can try to smooth it with an average kernel filter.
+ *
+ * @author Pedro Nogueira
+ * @since 2022-05-25
+ */
 #include <iostream>
 
 #include "Globals.h"
