@@ -18,24 +18,48 @@ using namespace std;
 int main() {
   string imgDir = "../img/";
   string colorGirlImgName = "colorGirl.jpg";
+  string carImgName = "car.png";
+  string crowdImgName = "crowd.png";
+  string universityImgName = "university.png";
   string imgNameEdge2;
   string imgNameEdge4;
   string imgNameEdge8;
+  int choice;
 
   cout << endl;
 
-  imgNameEdge2 = cutAndEnlarge(imgDir + colorGirlImgName, 2);
-  imgNameEdge4 = cutAndEnlarge(imgDir + colorGirlImgName, 4);
-  imgNameEdge8 = cutAndEnlarge(imgDir + colorGirlImgName, 8);
+  cout << "Choose a solution" << endl;
+  cout << " 1 - cut and enlarge" << endl;
+  cout << " 2 - equalize" << endl << endl;
 
-  if (imgNameEdge2 == "" || imgNameEdge4 == "" || imgNameEdge8 == "") {
-    cout << ERROR << "Can't continue without all enlarged pictures." << endl;
-    return 1;
+  cin >> choice;
+  cout << endl;
+
+  switch (choice) {
+    case 1:
+      imgNameEdge2 = cutAndEnlarge(imgDir + colorGirlImgName, 2);
+      imgNameEdge4 = cutAndEnlarge(imgDir + colorGirlImgName, 4);
+      imgNameEdge8 = cutAndEnlarge(imgDir + colorGirlImgName, 8);
+
+      if (imgNameEdge2 == "" || imgNameEdge4 == "" || imgNameEdge8 == "") {
+        cout << ERROR << "Can't continue without all enlarged pictures."
+             << endl;
+        return 1;
+      }
+
+      edgeSmooth(imgNameEdge2, 3);
+      edgeSmooth(imgNameEdge4, 5);
+      edgeSmooth(imgNameEdge8, 7);
+      break;
+
+    case 2:
+      powerLawTransform(imgDir + carImgName, 2);
+      break;
+
+    default:
+      cout << "Inside default" << endl;
+      break;
   }
-
-  edgeSmooth(imgNameEdge2, 3);
-  edgeSmooth(imgNameEdge4, 5);
-  edgeSmooth(imgNameEdge8, 7);
 
   return 0;
 }

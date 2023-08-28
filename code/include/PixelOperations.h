@@ -45,4 +45,6 @@ std::string enlargeBits(std::string, int);
  */
 std::string edgeSmooth(std::string, int);
 
+std::string powerLawTransform(std::string, int);
+
 #endif  // PIXELOPERATIONS

@@ -298,3 +298,57 @@ string edgeSmooth(string imgNameOrig, int factor) {
   destroyAllWindows();
   return "";
 }
+
+string powerLawTransform(string imgNameOrig, int factor) {
+  Mat img = imread(imgNameOrig, IMREAD_GRAYSCALE);
+  stringstream stringStreamAux;
+  string factorString;
+  string imgNameTrans;
+  string origImgString = "Image before transforming";
+  string transImgString = "Image after transforming";
+  bool writeSuccessful;
+  double corrector = pow(255, factor - 1);
+
+  if (!img.data) {
+    cout << ERROR << "Image " << imgNameOrig << " could not be read!" << endl;
+    return "";
+  }
+
+  // Show original image.
+  namedWindow(origImgString, WINDOW_AUTOSIZE);
+  imshow(origImgString, img);
+  cout << INFO << origImgString << endl;
+
+  for (int i = 0; i < img.rows; i++) {
+    for (int j = 0; j < img.cols; j++) {
+      img.at<uchar>(i, j) = (int)(pow(img.at<uchar>(i, j), factor) / corrector);
+    }
+  }
+
+  // Show smooth image.
+  namedWindow(transImgString, WINDOW_AUTOSIZE);
+  imshow(transImgString, img);
+  cout << INFO << transImgString << endl;
+
+  // Create sstream to put the factor number into the file name.
+  stringStreamAux << factor;
+  factorString = stringStreamAux.str();
+
+  imgNameTrans = imgNameOrig;
+  imgNameTrans.insert(imgNameTrans.find_last_of('/'), "/powerLawTrans");
+  imgNameTrans.insert(imgNameTrans.find_last_of('.'), "_powerLawTrans_");
+  imgNameTrans.insert(imgNameTrans.find_last_of('.'), factorString);
+
+  writeSuccessful = imwrite(imgNameTrans, img);
+  if (writeSuccessful == false) {
+    cout << ERROR << "Could not save file " << imgNameTrans << "!" << endl;
+    return "";
+  } else {
+    cout << SAVED << transImgString << " -> " << imgNameTrans << endl;
+  }
+
+  cout << endl;
+  waitKey(0);
+  destroyAllWindows();
+  return imgNameTrans;
+}
