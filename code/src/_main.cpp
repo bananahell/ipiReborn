@@ -54,12 +54,15 @@ int main() {
 
     case 2:
       powerLawTransform(imgDir + carImgName, 2);
+      histogramTransform(imgDir + crowdImgName);
       break;
 
     default:
       cout << "Inside default" << endl;
       break;
   }
+
+  cout << endl;
 
   return 0;
 }

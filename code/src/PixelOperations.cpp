@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <sstream>
+#include <vector>
 
 #include "Globals.h"
 
@@ -304,8 +305,8 @@ string powerLawTransform(string imgNameOrig, int factor) {
   stringstream stringStreamAux;
   string factorString;
   string imgNameTrans;
-  string origImgString = "Image before transforming";
-  string transImgString = "Image after transforming";
+  string origImgString = "Image before power law transforming";
+  string transImgString = "Image after power law transforming";
   bool writeSuccessful;
   double corrector = pow(255, factor - 1);
 
@@ -340,6 +341,73 @@ string powerLawTransform(string imgNameOrig, int factor) {
   imgNameTrans.insert(imgNameTrans.find_last_of('.'), factorString);
 
   writeSuccessful = imwrite(imgNameTrans, img);
+  if (writeSuccessful == false) {
+    cout << ERROR << "Could not save file " << imgNameTrans << "!" << endl;
+    return "";
+  } else {
+    cout << SAVED << transImgString << " -> " << imgNameTrans << endl;
+  }
+
+  cout << endl;
+  waitKey(0);
+  destroyAllWindows();
+  return imgNameTrans;
+}
+
+string histogramTransform(string imgNameOrig) {
+  Mat imgOrig = imread(imgNameOrig, IMREAD_GRAYSCALE);
+  string imgNameTrans;
+  string origImgString = "Image before histogram transforming";
+  string transImgString = "Image after histogram transforming";
+  bool writeSuccessful;
+  vector<double> pixelsPercent;
+  int pixelsAmmount;
+
+  if (!imgOrig.data) {
+    cout << ERROR << "Image " << imgNameOrig << " could not be read!" << endl;
+    return "";
+  }
+
+  pixelsAmmount = imgOrig.rows * imgOrig.cols;
+
+  // Show original image.
+  namedWindow(origImgString, WINDOW_AUTOSIZE);
+  imshow(origImgString, imgOrig);
+  cout << INFO << origImgString << endl;
+
+  for (int i = 0; i < 256; i++) {
+    pixelsPercent.push_back(0);
+  }
+
+  for (int i = 0; i < imgOrig.rows; i++) {
+    for (int j = 0; j < imgOrig.cols; j++) {
+      ++pixelsPercent.at(imgOrig.at<uchar>(i, j));
+    }
+  }
+
+  for (int i = 0; i < 256; i++) {
+    pixelsPercent.at(i) = (pixelsPercent.at(i) * 255) / pixelsAmmount;
+    if (i != 0) {
+      pixelsPercent.at(i) += pixelsPercent.at(i - 1);
+    }
+  }
+
+  for (int i = 0; i < imgOrig.rows; i++) {
+    for (int j = 0; j < imgOrig.cols; j++) {
+      imgOrig.at<uchar>(i, j) = (int)pixelsPercent.at(imgOrig.at<uchar>(i, j));
+    }
+  }
+
+  // Show original image.
+  namedWindow(transImgString, WINDOW_AUTOSIZE);
+  imshow(transImgString, imgOrig);
+  cout << INFO << transImgString << endl;
+
+  imgNameTrans = imgNameOrig;
+  imgNameTrans.insert(imgNameTrans.find_last_of('/'), "/histogramTrans");
+  imgNameTrans.insert(imgNameTrans.find_last_of('.'), "_histogramTrans");
+
+  writeSuccessful = imwrite(imgNameTrans, imgOrig);
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameTrans << "!" << endl;
     return "";

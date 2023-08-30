@@ -47,4 +47,6 @@ std::string edgeSmooth(std::string, int);
 
 std::string powerLawTransform(std::string, int);
 
+std::string histogramTransform(std::string);
+
 #endif  // PIXELOPERATIONS
