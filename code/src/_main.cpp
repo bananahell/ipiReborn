@@ -24,6 +24,7 @@ int main() {
   string imgNameEdge2;
   string imgNameEdge4;
   string imgNameEdge8;
+  string chosenImg;
   int choice;
 
   cout << endl;
@@ -53,8 +54,32 @@ int main() {
       break;
 
     case 2:
-      powerLawTransform(imgDir + carImgName, 2);
-      histogramTransform(imgDir + crowdImgName);
+
+      cout << "Choose a picture to transform" << endl;
+      cout << " 1 - car" << endl;
+      cout << " 2 - crowd" << endl;
+      cout << " 3 - university" << endl << endl;
+
+      cin >> choice;
+      cout << endl;
+
+      switch (choice) {
+        case 1:
+          chosenImg = carImgName;
+          break;
+        case 2:
+          chosenImg = crowdImgName;
+          break;
+        case 3:
+          chosenImg = universityImgName;
+          break;
+        default:
+          cout << "Inside default" << endl;
+          exit(0);
+      }
+
+      powerLawTransform(imgDir + chosenImg, 2);
+      histogramTransform(imgDir + chosenImg);
       break;
 
     default:

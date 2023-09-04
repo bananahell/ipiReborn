@@ -38,11 +38,6 @@ string cutImg(string imgNameOrig, int factor) {
     return "";
   }
 
-  // Show original image.
-  namedWindow(preCutImgStr, WINDOW_AUTOSIZE);
-  imshow(preCutImgStr, imgOrig);
-  cout << INFO << preCutImgStr << endl;
-
   // "Cutting" an image means selecting the first pixel in each imaginary square
   // kernel made with a side equal to the factor, so it must be able to divide
   // both height and width of the image.
@@ -54,6 +49,11 @@ string cutImg(string imgNameOrig, int factor) {
          << endl;
     return "";
   }
+
+  // Show original image.
+  namedWindow(preCutImgStr, WINDOW_AUTOSIZE);
+  imshow(preCutImgStr, imgOrig);
+  cout << INFO << preCutImgStr << endl;
 
   // Create an all black image with the right dimensions (divided by factor).
   Mat imgCut(imgOrig.rows / factor, imgOrig.cols / factor, CV_8UC3,
@@ -86,6 +86,7 @@ string cutImg(string imgNameOrig, int factor) {
   writeSuccessful = imwrite(imgNameCut, imgCut);
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameCut << "!" << endl;
+    destroyAllWindows();
     return "";
   } else {
     cout << SAVED << postCutImgStr << " -> " << imgNameCut << endl;
@@ -170,6 +171,7 @@ string enlargeBits(string imgNameOrig, int factor) {
   writeSuccessful = imwrite(imgNameLarge, imgLarge);
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameLarge << "!" << endl;
+    destroyAllWindows();
     return "";
   }
   cout << SAVED << largeImgString << " -> " << imgNameLarge << endl;
@@ -290,6 +292,7 @@ string edgeSmooth(string imgNameOrig, int factor) {
   writeSuccessful = imwrite(imgNameSmooth, imgSmooth);
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameSmooth << "!" << endl;
+    destroyAllWindows();
     return "";
   }
   cout << SAVED << smoothImgString << " -> " << imgNameSmooth << endl;
@@ -343,10 +346,10 @@ string powerLawTransform(string imgNameOrig, int factor) {
   writeSuccessful = imwrite(imgNameTrans, img);
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameTrans << "!" << endl;
+    destroyAllWindows();
     return "";
-  } else {
-    cout << SAVED << transImgString << " -> " << imgNameTrans << endl;
   }
+  cout << SAVED << transImgString << " -> " << imgNameTrans << endl;
 
   cout << endl;
   waitKey(0);
@@ -355,65 +358,146 @@ string powerLawTransform(string imgNameOrig, int factor) {
 }
 
 string histogramTransform(string imgNameOrig) {
-  Mat imgOrig = imread(imgNameOrig, IMREAD_GRAYSCALE);
+  Mat img = imread(imgNameOrig, IMREAD_GRAYSCALE);
   string imgNameTrans;
   string origImgString = "Image before histogram transforming";
   string transImgString = "Image after histogram transforming";
+  string histOrigImgString = "Histogram before transforming";
+  string histTransImgString = "Histogram after transforming";
   bool writeSuccessful;
-  vector<double> pixelsPercent;
+  vector<int> chanAmmountOrig;
+  vector<int> chanAmmountTrans;
+  vector<double> chanPercentOrig;
+  vector<double> chanPercentTrans;
+  vector<double> transChannels;
   int pixelsAmmount;
+  int normalizedChanAmmount;
+  double highestFrequency = 0;
 
-  if (!imgOrig.data) {
+  if (!img.data) {
     cout << ERROR << "Image " << imgNameOrig << " could not be read!" << endl;
     return "";
   }
 
-  pixelsAmmount = imgOrig.rows * imgOrig.cols;
+  pixelsAmmount = img.rows * img.cols;
 
   // Show original image.
   namedWindow(origImgString, WINDOW_AUTOSIZE);
-  imshow(origImgString, imgOrig);
+  imshow(origImgString, img);
   cout << INFO << origImgString << endl;
 
   for (int i = 0; i < 256; i++) {
-    pixelsPercent.push_back(0);
+    chanAmmountOrig.push_back(0);
+    chanPercentOrig.push_back(0);
+    chanAmmountTrans.push_back(0);
+    transChannels.push_back(0);
+    chanPercentTrans.push_back(0);
   }
 
-  for (int i = 0; i < imgOrig.rows; i++) {
-    for (int j = 0; j < imgOrig.cols; j++) {
-      ++pixelsPercent.at(imgOrig.at<uchar>(i, j));
+  for (int i = 0; i < img.rows; i++) {
+    for (int j = 0; j < img.cols; j++) {
+      ++chanAmmountOrig.at(img.at<uchar>(i, j));
     }
   }
 
   for (int i = 0; i < 256; i++) {
-    pixelsPercent.at(i) = (pixelsPercent.at(i) * 255) / pixelsAmmount;
+    chanPercentOrig.at(i) = ((double)chanAmmountOrig.at(i)) / pixelsAmmount;
+    transChannels.at(i) = chanPercentOrig.at(i) * 255;
     if (i != 0) {
-      pixelsPercent.at(i) += pixelsPercent.at(i - 1);
+      transChannels.at(i) += transChannels.at(i - 1);
     }
   }
 
-  for (int i = 0; i < imgOrig.rows; i++) {
-    for (int j = 0; j < imgOrig.cols; j++) {
-      imgOrig.at<uchar>(i, j) = (int)pixelsPercent.at(imgOrig.at<uchar>(i, j));
+  for (int i = 0; i < img.rows; i++) {
+    for (int j = 0; j < img.cols; j++) {
+      img.at<uchar>(i, j) = (int)transChannels.at(img.at<uchar>(i, j));
     }
   }
 
   // Show original image.
   namedWindow(transImgString, WINDOW_AUTOSIZE);
-  imshow(transImgString, imgOrig);
+  imshow(transImgString, img);
   cout << INFO << transImgString << endl;
 
   imgNameTrans = imgNameOrig;
   imgNameTrans.insert(imgNameTrans.find_last_of('/'), "/histogramTrans");
   imgNameTrans.insert(imgNameTrans.find_last_of('.'), "_histogramTrans");
 
-  writeSuccessful = imwrite(imgNameTrans, imgOrig);
+  writeSuccessful = imwrite(imgNameTrans, img);
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameTrans << "!" << endl;
+    destroyAllWindows();
     return "";
-  } else {
-    cout << SAVED << transImgString << " -> " << imgNameTrans << endl;
   }
+  cout << SAVED << transImgString << " -> " << imgNameTrans << endl;
+
+  Mat imgHistogramOrig(512, 512, CV_8UC3, Scalar(0, 0, 0));
+
+  for (int i = 0; i < 256; i++) {
+    if (chanPercentOrig.at(i) > highestFrequency) {
+      highestFrequency = chanPercentOrig.at(i);
+    }
+  }
+
+  for (int i = 0; i < 256; i++) {
+    normalizedChanAmmount = (chanPercentOrig.at(i) * 512) / highestFrequency;
+    if (normalizedChanAmmount > 511) {
+      normalizedChanAmmount = 511;
+    }
+    for (int j = 511; j >= 511 - normalizedChanAmmount; j--) {
+      imgHistogramOrig.at<uchar>(j, i * 6) = 255;
+      imgHistogramOrig.at<uchar>(j, (i * 6) + 1) = 255;
+      imgHistogramOrig.at<uchar>(j, (i * 6) + 2) = 255;
+      imgHistogramOrig.at<uchar>(j, (i * 6) + 3) = 255;
+      imgHistogramOrig.at<uchar>(j, (i * 6) + 4) = 255;
+      imgHistogramOrig.at<uchar>(j, (i * 6) + 5) = 255;
+    }
+  }
+
+  // Show original image.
+  namedWindow(histOrigImgString, WINDOW_AUTOSIZE);
+  imshow(histOrigImgString, imgHistogramOrig);
+  cout << INFO << histOrigImgString << endl;
+
+  for (int i = 0; i < img.rows; i++) {
+    for (int j = 0; j < img.cols; j++) {
+      ++chanAmmountTrans.at(img.at<uchar>(i, j));
+    }
+  }
+
+  for (int i = 0; i < 256; i++) {
+    chanPercentTrans.at(i) = ((double)chanAmmountTrans.at(i)) / pixelsAmmount;
+  }
+
+  highestFrequency = 0;
+
+  for (int i = 0; i < 256; i++) {
+    if (chanPercentTrans.at(i) > highestFrequency) {
+      highestFrequency = chanPercentTrans.at(i);
+    }
+  }
+
+  Mat imgHistogramTrans(512, 512, CV_8UC3, Scalar(0, 0, 0));
+
+  for (int i = 0; i < 256; i++) {
+    normalizedChanAmmount = (chanPercentTrans.at(i) * 512) / highestFrequency;
+    if (normalizedChanAmmount > 511) {
+      normalizedChanAmmount = 511;
+    }
+    for (int j = 511; j >= 511 - normalizedChanAmmount; j--) {
+      imgHistogramTrans.at<uchar>(j, i * 6) = 255;
+      imgHistogramTrans.at<uchar>(j, (i * 6) + 1) = 255;
+      imgHistogramTrans.at<uchar>(j, (i * 6) + 2) = 255;
+      imgHistogramTrans.at<uchar>(j, (i * 6) + 3) = 255;
+      imgHistogramTrans.at<uchar>(j, (i * 6) + 4) = 255;
+      imgHistogramTrans.at<uchar>(j, (i * 6) + 5) = 255;
+    }
+  }
+
+  // Show original image.
+  namedWindow(histTransImgString, WINDOW_AUTOSIZE);
+  imshow(histTransImgString, imgHistogramTrans);
+  cout << INFO << histTransImgString << endl;
 
   cout << endl;
   waitKey(0);
