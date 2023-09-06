@@ -74,8 +74,8 @@ int main() {
           chosenImg = universityImgName;
           break;
         default:
-          cout << "Inside default" << endl;
-          exit(0);
+          cout << "Inside default" << endl << endl;
+          exit(1);
       }
 
       powerLawTransform(imgDir + chosenImg, 2);
@@ -83,8 +83,8 @@ int main() {
       break;
 
     default:
-      cout << "Inside default" << endl;
-      break;
+      cout << "Inside default" << endl << endl;
+      exit(1);
   }
 
   cout << endl;

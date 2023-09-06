@@ -45,8 +45,21 @@ std::string enlargeBits(std::string, int);
  */
 std::string edgeSmooth(std::string, int);
 
+/**
+ * @brief Transforms the pixels in an image raising the pixels' values to the
+ * factor equalized.
+ * @param imgNameOrig Directory and name of the image file.
+ * @param factor Exponent to raise the pixels to the power of.
+ * @return Name of the transformed image, empty string if failure.
+ */
 std::string powerLawTransform(std::string, int);
 
+/**
+ * @brief Tranforms the pixels in an image equalizing the pixels by their
+ * percentage of occurrences in the image.
+ * @param imgNameOrig Directory and name of the image file.
+ * @return Name of the transformed image, empty string if failure.
+ */
 std::string histogramTransform(std::string);
 
 #endif  // PIXELOPERATIONS

@@ -47,6 +47,7 @@ string cutImg(string imgNameOrig, int factor) {
          << "Image cutting factor should be divisible by both the image's "
             "width and height!"
          << endl;
+    imgOrig.release();
     return "";
   }
 
@@ -87,6 +88,8 @@ string cutImg(string imgNameOrig, int factor) {
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameCut << "!" << endl;
     destroyAllWindows();
+    imgOrig.release();
+    imgCut.release();
     return "";
   } else {
     cout << SAVED << postCutImgStr << " -> " << imgNameCut << endl;
@@ -95,6 +98,8 @@ string cutImg(string imgNameOrig, int factor) {
   cout << endl;
   waitKey(0);
   destroyAllWindows();
+  imgOrig.release();
+  imgCut.release();
   return imgNameCut;
 }
 
@@ -172,6 +177,8 @@ string enlargeBits(string imgNameOrig, int factor) {
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameLarge << "!" << endl;
     destroyAllWindows();
+    imgOrig.release();
+    imgLarge.release();
     return "";
   }
   cout << SAVED << largeImgString << " -> " << imgNameLarge << endl;
@@ -179,6 +186,8 @@ string enlargeBits(string imgNameOrig, int factor) {
   cout << endl;
   waitKey(0);
   destroyAllWindows();
+  imgOrig.release();
+  imgLarge.release();
   return imgNameLarge;
 }
 
@@ -293,6 +302,8 @@ string edgeSmooth(string imgNameOrig, int factor) {
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameSmooth << "!" << endl;
     destroyAllWindows();
+    imgOrig.release();
+    imgSmooth.release();
     return "";
   }
   cout << SAVED << smoothImgString << " -> " << imgNameSmooth << endl;
@@ -300,11 +311,13 @@ string edgeSmooth(string imgNameOrig, int factor) {
   cout << endl;
   waitKey(0);
   destroyAllWindows();
-  return "";
+  imgOrig.release();
+  imgSmooth.release();
+  return imgNameSmooth;
 }
 
 string powerLawTransform(string imgNameOrig, int factor) {
-  Mat img = imread(imgNameOrig, IMREAD_GRAYSCALE);
+  Mat img;
   stringstream stringStreamAux;
   string factorString;
   string imgNameTrans;
@@ -313,6 +326,8 @@ string powerLawTransform(string imgNameOrig, int factor) {
   bool writeSuccessful;
   double corrector = pow(255, factor - 1);
 
+  // Read and check image.
+  img = imread(imgNameOrig, IMREAD_GRAYSCALE);
   if (!img.data) {
     cout << ERROR << "Image " << imgNameOrig << " could not be read!" << endl;
     return "";
@@ -323,13 +338,16 @@ string powerLawTransform(string imgNameOrig, int factor) {
   imshow(origImgString, img);
   cout << INFO << origImgString << endl;
 
+  // Power law transform the image. It gets the luminosity value of each pixel
+  // and raises it to the power of the factor parameter scaled down to max at
+  // the maximum luminosity value (512).
   for (int i = 0; i < img.rows; i++) {
     for (int j = 0; j < img.cols; j++) {
       img.at<uchar>(i, j) = (int)(pow(img.at<uchar>(i, j), factor) / corrector);
     }
   }
 
-  // Show smooth image.
+  // Show transformed image.
   namedWindow(transImgString, WINDOW_AUTOSIZE);
   imshow(transImgString, img);
   cout << INFO << transImgString << endl;
@@ -338,15 +356,20 @@ string powerLawTransform(string imgNameOrig, int factor) {
   stringStreamAux << factor;
   factorString = stringStreamAux.str();
 
+  // Create file with name and directory.
+  // Example (file name = name.jpg, factor = 3):
+  // "../img/powerLawTrans/name_powerLawTrans_3.jpg".
   imgNameTrans = imgNameOrig;
   imgNameTrans.insert(imgNameTrans.find_last_of('/'), "/powerLawTrans");
   imgNameTrans.insert(imgNameTrans.find_last_of('.'), "_powerLawTrans_");
   imgNameTrans.insert(imgNameTrans.find_last_of('.'), factorString);
 
+  // Attempt to write the new image file with the new name.
   writeSuccessful = imwrite(imgNameTrans, img);
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameTrans << "!" << endl;
     destroyAllWindows();
+    img.release();
     return "";
   }
   cout << SAVED << transImgString << " -> " << imgNameTrans << endl;
@@ -354,11 +377,12 @@ string powerLawTransform(string imgNameOrig, int factor) {
   cout << endl;
   waitKey(0);
   destroyAllWindows();
+  img.release();
   return imgNameTrans;
 }
 
 string histogramTransform(string imgNameOrig) {
-  Mat img = imread(imgNameOrig, IMREAD_GRAYSCALE);
+  Mat img;
   string imgNameTrans;
   string origImgString = "Image before histogram transforming";
   string transImgString = "Image after histogram transforming";
@@ -374,11 +398,14 @@ string histogramTransform(string imgNameOrig) {
   int normalizedChanAmmount;
   double highestFrequency = 0;
 
+  // Read and check image.
+  img = imread(imgNameOrig, IMREAD_GRAYSCALE);
   if (!img.data) {
     cout << ERROR << "Image " << imgNameOrig << " could not be read!" << endl;
     return "";
   }
 
+  // Get total number of pixels
   pixelsAmmount = img.rows * img.cols;
 
   // Show original image.
@@ -386,6 +413,7 @@ string histogramTransform(string imgNameOrig) {
   imshow(origImgString, img);
   cout << INFO << origImgString << endl;
 
+  // Initialize each vector size 256 (luminosity values).
   for (int i = 0; i < 256; i++) {
     chanAmmountOrig.push_back(0);
     chanPercentOrig.push_back(0);
@@ -394,12 +422,17 @@ string histogramTransform(string imgNameOrig) {
     chanPercentTrans.push_back(0);
   }
 
+  // Get number of luminosity occurrences in all pixels.
   for (int i = 0; i < img.rows; i++) {
     for (int j = 0; j < img.cols; j++) {
       ++chanAmmountOrig.at(img.at<uchar>(i, j));
     }
   }
 
+  // Distributes the pixel luminosities by their percentage of occurrences.
+  // The new pixel values add with the last pixel values to accumulate the
+  // percentage values, distributing the pixel values throughout the image, but
+  // keeping the relative luminosity of each pixel still in reference.
   for (int i = 0; i < 256; i++) {
     chanPercentOrig.at(i) = ((double)chanAmmountOrig.at(i)) / pixelsAmmount;
     transChannels.at(i) = chanPercentOrig.at(i) * 255;
@@ -408,42 +441,56 @@ string histogramTransform(string imgNameOrig) {
     }
   }
 
+  // Apply the new luminosity values calculated earlier to the new image.
   for (int i = 0; i < img.rows; i++) {
     for (int j = 0; j < img.cols; j++) {
       img.at<uchar>(i, j) = (int)transChannels.at(img.at<uchar>(i, j));
     }
   }
 
-  // Show original image.
+  // Show tranformed image.
   namedWindow(transImgString, WINDOW_AUTOSIZE);
   imshow(transImgString, img);
   cout << INFO << transImgString << endl;
 
+  // Create file with name and directory.
+  // Example (file name = name.jpg):
+  // "../img/histogramTrans/name_histogramTrans.jpg".
   imgNameTrans = imgNameOrig;
   imgNameTrans.insert(imgNameTrans.find_last_of('/'), "/histogramTrans");
   imgNameTrans.insert(imgNameTrans.find_last_of('.'), "_histogramTrans");
 
+  // Attempt to write the new image file with the new name.
   writeSuccessful = imwrite(imgNameTrans, img);
   if (writeSuccessful == false) {
     cout << ERROR << "Could not save file " << imgNameTrans << "!" << endl;
     destroyAllWindows();
+    img.release();
     return "";
   }
   cout << SAVED << transImgString << " -> " << imgNameTrans << endl;
 
+  // Initialize the original histogram image.
   Mat imgHistogramOrig(512, 512, CV_8UC3, Scalar(0, 0, 0));
 
+  // Get highest frequency of the repeating pixel values.
   for (int i = 0; i < 256; i++) {
     if (chanPercentOrig.at(i) > highestFrequency) {
       highestFrequency = chanPercentOrig.at(i);
     }
   }
 
+  // For each pixel value, iterate through image to draw "white bars" with the
+  // height of their percentages.
   for (int i = 0; i < 256; i++) {
     normalizedChanAmmount = (chanPercentOrig.at(i) * 512) / highestFrequency;
+    // The highest frequency divided by itself always returns 1, so drag it down
+    // to 511 to not go out of bounds.
     if (normalizedChanAmmount > 511) {
       normalizedChanAmmount = 511;
     }
+    // TODO nao sei por que tenho que fazer 6 vezes... se sao 256 valores, nao
+    // devia so botar cada barra 2 vezes para chegar em 512?
     for (int j = 511; j >= 511 - normalizedChanAmmount; j--) {
       imgHistogramOrig.at<uchar>(j, i * 6) = 255;
       imgHistogramOrig.at<uchar>(j, (i * 6) + 1) = 255;
@@ -454,36 +501,45 @@ string histogramTransform(string imgNameOrig) {
     }
   }
 
-  // Show original image.
+  // Show histogram of the original image.
   namedWindow(histOrigImgString, WINDOW_AUTOSIZE);
   imshow(histOrigImgString, imgHistogramOrig);
   cout << INFO << histOrigImgString << endl;
 
+  // Get number of luminosity occurrences in all pixels, just like original.
   for (int i = 0; i < img.rows; i++) {
     for (int j = 0; j < img.cols; j++) {
       ++chanAmmountTrans.at(img.at<uchar>(i, j));
     }
   }
 
+  // Distributes the pixel luminosities by their percentage of occurrences.
   for (int i = 0; i < 256; i++) {
     chanPercentTrans.at(i) = ((double)chanAmmountTrans.at(i)) / pixelsAmmount;
   }
 
-  highestFrequency = 0;
+  // Initialize the original histogram image.
+  Mat imgHistogramTrans(512, 512, CV_8UC3, Scalar(0, 0, 0));
 
+  // Get highest frequency of the repeating pixel values.
+  highestFrequency = 0;
   for (int i = 0; i < 256; i++) {
     if (chanPercentTrans.at(i) > highestFrequency) {
       highestFrequency = chanPercentTrans.at(i);
     }
   }
 
-  Mat imgHistogramTrans(512, 512, CV_8UC3, Scalar(0, 0, 0));
-
+  // For each pixel value, iterate through image to draw "white bars" with the
+  // height of their percentages.
   for (int i = 0; i < 256; i++) {
     normalizedChanAmmount = (chanPercentTrans.at(i) * 512) / highestFrequency;
+    // The highest frequency divided by itself always returns 1, so drag it down
+    // to 511 to not go out of bounds.
     if (normalizedChanAmmount > 511) {
       normalizedChanAmmount = 511;
     }
+    // TODO nao sei por que tenho que fazer 6 vezes... se sao 256 valores, nao
+    // devia so botar cada barra 2 vezes para chegar em 512?
     for (int j = 511; j >= 511 - normalizedChanAmmount; j--) {
       imgHistogramTrans.at<uchar>(j, i * 6) = 255;
       imgHistogramTrans.at<uchar>(j, (i * 6) + 1) = 255;
@@ -494,7 +550,7 @@ string histogramTransform(string imgNameOrig) {
     }
   }
 
-  // Show original image.
+  // Show histogram of transformed image.
   namedWindow(histTransImgString, WINDOW_AUTOSIZE);
   imshow(histTransImgString, imgHistogramTrans);
   cout << INFO << histTransImgString << endl;
@@ -502,5 +558,8 @@ string histogramTransform(string imgNameOrig) {
   cout << endl;
   waitKey(0);
   destroyAllWindows();
+  img.release();
+  imgHistogramOrig.release();
+  imgHistogramTrans.release();
   return imgNameTrans;
 }

@@ -68,7 +68,7 @@ cppcheck:
 
 ##### Call for valgrind
 valgrind:
-	valgrind -s --leak-check=full --show-leak-kinds=all ./$(EXEC)
+	valgrind -s --suppressions=/usr/local/share/opencv4/valgrind.supp --suppressions=/usr/local/share/opencv4/valgrind_3rdparty.supp --leak-check=full --show-leak-kinds=all ./$(EXEC)
 
 release: FLAGS += $(RFLAGS)
 release: $(EXEC)
