@@ -45,8 +45,8 @@ string cutImg(string imgNameOrig, int factor) {
   if (imgOrig.rows % factor != 0 || imgOrig.cols % factor != 0) {
     cout << ERROR
          << "Image cutting factor should be divisible by both the image's "
-            "width and height!"
-         << endl;
+            "width ("
+         << imgOrig.cols << ") and height (" << imgOrig.rows << ")!" << endl;
     imgOrig.release();
     return "";
   }
@@ -316,7 +316,7 @@ string edgeSmooth(string imgNameOrig, int factor) {
   return imgNameSmooth;
 }
 
-string powerLawTransform(string imgNameOrig, int factor) {
+string powerLawTransform(string imgNameOrig, double factor) {
   Mat img;
   stringstream stringStreamAux;
   string factorString;
@@ -355,6 +355,9 @@ string powerLawTransform(string imgNameOrig, int factor) {
   // Create sstream to put the factor number into the file name.
   stringStreamAux << factor;
   factorString = stringStreamAux.str();
+  if (factorString.find('.') != string::npos) {
+    factorString.replace(factorString.find('.'), 1, ",");
+  }
 
   // Create file with name and directory.
   // Example (file name = name.jpg, factor = 3):

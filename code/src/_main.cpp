@@ -21,73 +21,104 @@ int main() {
   string carImgName = "car.png";
   string crowdImgName = "crowd.png";
   string universityImgName = "university.png";
-  string imgNameEdge2;
-  string imgNameEdge4;
-  string imgNameEdge8;
-  string chosenImg;
+  string img = "";
+  double factor;
   int choice;
+  bool quit = false;
 
-  cout << endl;
+  do {
+    cout << endl;
 
-  cout << "Choose a solution" << endl;
-  cout << " 1 - cut and enlarge" << endl;
-  cout << " 2 - equalize" << endl << endl;
+    cout << "Choose a solution" << endl;
+    cout << "  1 - cut and enlarge" << endl;
+    cout << "  2 - transform with power law" << endl;
+    cout << "  3 - transform with equalized histogram" << endl;
+    cout << "  any - quit" << endl << endl;
 
-  cin >> choice;
-  cout << endl;
+    cin >> choice;
+    cout << endl;
 
-  switch (choice) {
-    case 1:
-      imgNameEdge2 = cutAndEnlarge(imgDir + colorGirlImgName, 2);
-      imgNameEdge4 = cutAndEnlarge(imgDir + colorGirlImgName, 4);
-      imgNameEdge8 = cutAndEnlarge(imgDir + colorGirlImgName, 8);
-
-      if (imgNameEdge2 == "" || imgNameEdge4 == "" || imgNameEdge8 == "") {
-        cout << ERROR << "Can't continue without all enlarged pictures."
-             << endl;
-        return 1;
-      }
-
-      edgeSmooth(imgNameEdge2, 3);
-      edgeSmooth(imgNameEdge4, 5);
-      edgeSmooth(imgNameEdge8, 7);
-      break;
-
-    case 2:
-
-      cout << "Choose a picture to transform" << endl;
-      cout << " 1 - car" << endl;
-      cout << " 2 - crowd" << endl;
-      cout << " 3 - university" << endl << endl;
-
-      cin >> choice;
-      cout << endl;
-
-      switch (choice) {
-        case 1:
-          chosenImg = carImgName;
+    switch (choice) {
+      case 1:
+        cout << "Type in a factor: ";
+        cin >> factor;
+        cout << endl;
+        img = cutAndEnlarge(imgDir + colorGirlImgName, factor);
+        if (img == "") {
           break;
-        case 2:
-          chosenImg = crowdImgName;
-          break;
-        case 3:
-          chosenImg = universityImgName;
-          break;
-        default:
-          cout << "Inside default" << endl << endl;
-          exit(1);
-      }
+        }
 
-      powerLawTransform(imgDir + chosenImg, 2);
-      histogramTransform(imgDir + chosenImg);
-      break;
+        cout << "Type in an odd factor: ";
+        cin >> factor;
+        cout << endl;
+        edgeSmooth(img, factor);
+        img = "";
+        break;
 
-    default:
-      cout << "Inside default" << endl << endl;
-      exit(1);
-  }
+      case 2:
+        cout << "Choose a picture to transform" << endl;
+        cout << "  1 - car" << endl;
+        cout << "  2 - crowd" << endl;
+        cout << "  3 - university" << endl << endl;
+        while (img == "") {
+          cin >> choice;
+          cout << endl;
+          switch (choice) {
+            case 1:
+              img = carImgName;
+              break;
+            case 2:
+              img = crowdImgName;
+              break;
+            case 3:
+              img = universityImgName;
+              break;
+            default:
+              cout << "Choose 1 of the pictures (1, 2, or 3)" << endl << endl;
+          }
+        }
 
-  cout << endl;
+        cout << "Type in a factor: ";
+        cin >> factor;
+        cout << endl;
+
+        powerLawTransform(imgDir + img, factor);
+        img = "";
+        break;
+
+      case 3:
+        cout << "Choose a picture to transform" << endl;
+        cout << "  1 - car" << endl;
+        cout << "  2 - crowd" << endl;
+        cout << "  3 - university" << endl << endl;
+        while (img == "") {
+          cin >> choice;
+          cout << endl;
+          switch (choice) {
+            case 1:
+              img = carImgName;
+              break;
+            case 2:
+              img = crowdImgName;
+              break;
+            case 3:
+              img = universityImgName;
+              break;
+            default:
+              cout << "Choose 1 of the pictures (1, 2, or 3)" << endl << endl;
+          }
+        }
+
+        histogramTransform(imgDir + img);
+        img = "";
+        break;
+
+      default:
+        cout << "Bye!" << endl;
+        quit = true;
+    }
+
+  } while (!quit);
 
   return 0;
 }

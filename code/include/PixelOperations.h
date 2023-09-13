@@ -52,7 +52,7 @@ std::string edgeSmooth(std::string, int);
  * @param factor Exponent to raise the pixels to the power of.
  * @return Name of the transformed image, empty string if failure.
  */
-std::string powerLawTransform(std::string, int);
+std::string powerLawTransform(std::string, double);
 
 /**
  * @brief Tranforms the pixels in an image equalizing the pixels by their
