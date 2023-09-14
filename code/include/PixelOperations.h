@@ -8,6 +8,7 @@
 #define PIXELOPERATIONS
 
 #include <string>
+#include <vector>
 
 /**
  * @brief Does cutImg and enlargeBits with the same factor in order.
@@ -61,5 +62,21 @@ std::string powerLawTransform(std::string, double);
  * @return Name of the transformed image, empty string if failure.
  */
 std::string histogramTransform(std::string);
+
+/**
+ * @brief Shows the histogram of the pixel values in a vector.
+ * @param chanPercent The percentages of each pixel value occurrence.
+ * @param highestFrequency The highest percentage in the vector.
+ * @param histImgString The name of the histogram image to be shown.
+ */
+void showHistogram(std::vector<double>, double, std::string);
+
+/**
+ * @brief Shows the histogram of the pixel values in a vector.
+ * @param chanAmmount The ammount of each pixel value occurrence.
+ * @param highestFrequency The highest ammount in the vector.
+ * @param histImgString The name of the histogram image to be shown.
+ */
+void showHistogram(std::vector<int>, double, std::string);
 
 #endif  // PIXELOPERATIONS

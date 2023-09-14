@@ -2,7 +2,6 @@
 
 #include <opencv2/opencv.hpp>
 #include <sstream>
-#include <vector>
 
 #include "Globals.h"
 
@@ -398,7 +397,6 @@ string histogramTransform(string imgNameOrig) {
   vector<double> chanPercentTrans;
   vector<double> transChannels;
   int pixelsAmmount;
-  int normalizedChanAmmount;
   double highestFrequency = 0;
 
   // Read and check image.
@@ -473,41 +471,7 @@ string histogramTransform(string imgNameOrig) {
   }
   cout << SAVED << transImgString << " -> " << imgNameTrans << endl;
 
-  // Initialize the original histogram image.
-  Mat imgHistogramOrig(512, 512, CV_8UC3, Scalar(0, 0, 0));
-
-  // Get highest frequency of the repeating pixel values.
-  for (int i = 0; i < 256; i++) {
-    if (chanPercentOrig.at(i) > highestFrequency) {
-      highestFrequency = chanPercentOrig.at(i);
-    }
-  }
-
-  // For each pixel value, iterate through image to draw "white bars" with the
-  // height of their percentages.
-  for (int i = 0; i < 256; i++) {
-    normalizedChanAmmount = (chanPercentOrig.at(i) * 512) / highestFrequency;
-    // The highest frequency divided by itself always returns 1, so drag it down
-    // to 511 to not go out of bounds.
-    if (normalizedChanAmmount > 511) {
-      normalizedChanAmmount = 511;
-    }
-    // TODO nao sei por que tenho que fazer 6 vezes... se sao 256 valores, nao
-    // devia so botar cada barra 2 vezes para chegar em 512?
-    for (int j = 511; j >= 511 - normalizedChanAmmount; j--) {
-      imgHistogramOrig.at<uchar>(j, i * 6) = 255;
-      imgHistogramOrig.at<uchar>(j, (i * 6) + 1) = 255;
-      imgHistogramOrig.at<uchar>(j, (i * 6) + 2) = 255;
-      imgHistogramOrig.at<uchar>(j, (i * 6) + 3) = 255;
-      imgHistogramOrig.at<uchar>(j, (i * 6) + 4) = 255;
-      imgHistogramOrig.at<uchar>(j, (i * 6) + 5) = 255;
-    }
-  }
-
-  // Show histogram of the original image.
-  namedWindow(histOrigImgString, WINDOW_AUTOSIZE);
-  imshow(histOrigImgString, imgHistogramOrig);
-  cout << INFO << histOrigImgString << endl;
+  showHistogram(chanPercentOrig, highestFrequency, histOrigImgString);
 
   // Get number of luminosity occurrences in all pixels, just like original.
   for (int i = 0; i < img.rows; i++) {
@@ -521,9 +485,6 @@ string histogramTransform(string imgNameOrig) {
     chanPercentTrans.at(i) = ((double)chanAmmountTrans.at(i)) / pixelsAmmount;
   }
 
-  // Initialize the original histogram image.
-  Mat imgHistogramTrans(512, 512, CV_8UC3, Scalar(0, 0, 0));
-
   // Get highest frequency of the repeating pixel values.
   highestFrequency = 0;
   for (int i = 0; i < 256; i++) {
@@ -532,10 +493,31 @@ string histogramTransform(string imgNameOrig) {
     }
   }
 
+  showHistogram(chanPercentTrans, highestFrequency, histTransImgString);
+
+  cout << endl;
+  waitKey(0);
+  destroyAllWindows();
+  img.release();
+  return imgNameTrans;
+}
+
+void showHistogram(vector<double> chanPercent, double highestFrequency,
+                   string histImgString) {
+  // Initialize the histogram image.
+  Mat imgHistogram(512, 512, CV_8UC3, Scalar(0, 0, 0));
+
+  // Get highest frequency of the repeating pixel values.
+  for (int i = 0; i < 256; i++) {
+    if (chanPercent.at(i) > highestFrequency) {
+      highestFrequency = chanPercent.at(i);
+    }
+  }
+
   // For each pixel value, iterate through image to draw "white bars" with the
   // height of their percentages.
   for (int i = 0; i < 256; i++) {
-    normalizedChanAmmount = (chanPercentTrans.at(i) * 512) / highestFrequency;
+    int normalizedChanAmmount = (chanPercent.at(i) * 512) / highestFrequency;
     // The highest frequency divided by itself always returns 1, so drag it down
     // to 511 to not go out of bounds.
     if (normalizedChanAmmount > 511) {
@@ -544,25 +526,17 @@ string histogramTransform(string imgNameOrig) {
     // TODO nao sei por que tenho que fazer 6 vezes... se sao 256 valores, nao
     // devia so botar cada barra 2 vezes para chegar em 512?
     for (int j = 511; j >= 511 - normalizedChanAmmount; j--) {
-      imgHistogramTrans.at<uchar>(j, i * 6) = 255;
-      imgHistogramTrans.at<uchar>(j, (i * 6) + 1) = 255;
-      imgHistogramTrans.at<uchar>(j, (i * 6) + 2) = 255;
-      imgHistogramTrans.at<uchar>(j, (i * 6) + 3) = 255;
-      imgHistogramTrans.at<uchar>(j, (i * 6) + 4) = 255;
-      imgHistogramTrans.at<uchar>(j, (i * 6) + 5) = 255;
+      imgHistogram.at<uchar>(j, i * 6) = 255;
+      imgHistogram.at<uchar>(j, (i * 6) + 1) = 255;
+      imgHistogram.at<uchar>(j, (i * 6) + 2) = 255;
+      imgHistogram.at<uchar>(j, (i * 6) + 3) = 255;
+      imgHistogram.at<uchar>(j, (i * 6) + 4) = 255;
+      imgHistogram.at<uchar>(j, (i * 6) + 5) = 255;
     }
   }
 
-  // Show histogram of transformed image.
-  namedWindow(histTransImgString, WINDOW_AUTOSIZE);
-  imshow(histTransImgString, imgHistogramTrans);
-  cout << INFO << histTransImgString << endl;
-
-  cout << endl;
-  waitKey(0);
-  destroyAllWindows();
-  img.release();
-  imgHistogramOrig.release();
-  imgHistogramTrans.release();
-  return imgNameTrans;
+  // Show histogram of the original image.
+  namedWindow(histImgString, WINDOW_AUTOSIZE);
+  imshow(histImgString, imgHistogram);
+  cout << INFO << histImgString << endl;
 }
